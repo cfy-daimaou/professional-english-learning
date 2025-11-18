@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471425431016",
+    "project_id": "meta-vision-app",
+    "storage_bucket": "meta-vision-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471425431016:android:f0adfd5ec57d6a1c1a605d",
+        "android_client_info": {
+          "package_name": "com.ProfessionalEnglishLearning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0NXsjAHc8OcaZFfSDNVvxDvc29quuETg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
