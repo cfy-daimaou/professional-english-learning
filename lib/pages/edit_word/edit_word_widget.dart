@@ -1,3 +1,4 @@
+import '/backend/sqlite/sqlite_manager.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -6,10 +7,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 import 'edit_word_model.dart';
 export 'edit_word_model.dart';
@@ -21,14 +21,14 @@ class EditWordWidget extends StatefulWidget {
     required this.initMeaning,
     required this.initExplain,
     required this.initUnit,
-    required this.editWordDoc,
+    required this.wordId,
   });
 
   final String? initWord;
   final String? initMeaning;
   final String? initExplain;
   final String? initUnit;
-  final DocumentReference? editWordDoc;
+  final int? wordId;
 
   static String routeName = 'EditWord';
   static String routePath = '/editWord';
@@ -37,7 +37,7 @@ class EditWordWidget extends StatefulWidget {
   State<EditWordWidget> createState() => _EditWordWidgetState();
 }
 
-class _EditWordWidgetState extends State<EditWordWidget> with RouteAware {
+class _EditWordWidgetState extends State<EditWordWidget> {
   late EditWordModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -47,84 +47,30 @@ class _EditWordWidgetState extends State<EditWordWidget> with RouteAware {
     super.initState();
     _model = createModel(context, () => EditWordModel());
 
-    _model.taskTextController1 ??= TextEditingController(text: widget!.initWord)
-      ..addListener(() {
-        debugLogWidgetClass(_model);
-      });
+    _model.taskTextController1 ??=
+        TextEditingController(text: widget!.initWord);
     _model.taskFocusNode1 ??= FocusNode();
 
     _model.taskTextController2 ??=
-        TextEditingController(text: widget!.initMeaning)
-          ..addListener(() {
-            debugLogWidgetClass(_model);
-          });
+        TextEditingController(text: widget!.initMeaning);
     _model.taskFocusNode2 ??= FocusNode();
 
     _model.descriptionTextController ??=
-        TextEditingController(text: widget!.initExplain)
-          ..addListener(() {
-            debugLogWidgetClass(_model);
-          });
+        TextEditingController(text: widget!.initExplain);
     _model.descriptionFocusNode ??= FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
-
     _model.dispose();
 
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(EditWordWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _model.widget = widget;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = DebugModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
-    }
-    debugLogGlobalProperty(context);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPush() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPop() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
-  void didPushNext() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    DebugFlutterFlowModelContext.maybeOf(context)
-        ?.parentModelCallback
-        ?.call(_model);
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -900,13 +846,20 @@ class _EditWordWidgetState extends State<EditWordWidget> with RouteAware {
                         EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
                     child: FFButtonWidget(
                       onPressed: () async {
-                        await widget!.editWordDoc!.update(createWordsRecordData(
-                          word: _model.taskTextController1.text,
-                          meaning: _model.taskTextController2.text,
-                          unit: _model.choiceChipsValue,
-                          explain: _model.descriptionTextController.text,
-                        ));
-                        context.safePop();
+                        try {
+                          if (widget.wordId == null) throw StateError('Missing word ID');
+                          await SQLiteManager.instance.saveWord(
+                            id: widget.wordId,
+                            word: _model.taskTextController1.text,
+                            meaning: _model.taskTextController2.text,
+                            unit: _model.choiceChipsValue ?? '',
+                            explanation: _model.descriptionTextController.text,
+                          );
+                          if (context.mounted) context.safePop();
+                        } catch (_) {
+                          if (context.mounted) showSnackbar(context,
+                            'Could not save. Check required fields and duplicate words.');
+                        }
                       },
                       text: 'Save',
                       options: FFButtonOptions(

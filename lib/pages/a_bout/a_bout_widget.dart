@@ -6,7 +6,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 import 'a_bout_model.dart';
 export 'a_bout_model.dart';
@@ -21,7 +21,7 @@ class ABoutWidget extends StatefulWidget {
   State<ABoutWidget> createState() => _ABoutWidgetState();
 }
 
-class _ABoutWidgetState extends State<ABoutWidget> with RouteAware {
+class _ABoutWidgetState extends State<ABoutWidget> {
   late ABoutModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -35,64 +35,19 @@ class _ABoutWidgetState extends State<ABoutWidget> with RouteAware {
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       safeSetState(() {});
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
-
     _model.dispose();
 
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(ABoutWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _model.widget = widget;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = DebugModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
-    }
-    debugLogGlobalProperty(context);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPush() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPop() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
-  void didPushNext() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    DebugFlutterFlowModelContext.maybeOf(context)
-        ?.parentModelCallback
-        ?.call(_model);
     context.watch<FFAppState>();
 
     return GestureDetector(

@@ -1,3 +1,4 @@
+import '/backend/sqlite/sqlite_manager.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -6,10 +7,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 import 'add_word_model.dart';
 export 'add_word_model.dart';
@@ -24,7 +24,7 @@ class AddWordWidget extends StatefulWidget {
   State<AddWordWidget> createState() => _AddWordWidgetState();
 }
 
-class _AddWordWidgetState extends State<AddWordWidget> with RouteAware {
+class _AddWordWidgetState extends State<AddWordWidget> {
   late AddWordModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -34,82 +34,27 @@ class _AddWordWidgetState extends State<AddWordWidget> with RouteAware {
     super.initState();
     _model = createModel(context, () => AddWordModel());
 
-    _model.taskTextController1 ??= TextEditingController()
-      ..addListener(() {
-        debugLogWidgetClass(_model);
-      });
+    _model.taskTextController1 ??= TextEditingController();
     _model.taskFocusNode1 ??= FocusNode();
 
-    _model.taskTextController2 ??= TextEditingController()
-      ..addListener(() {
-        debugLogWidgetClass(_model);
-      });
+    _model.taskTextController2 ??= TextEditingController();
     _model.taskFocusNode2 ??= FocusNode();
 
-    _model.descriptionTextController ??= TextEditingController()
-      ..addListener(() {
-        debugLogWidgetClass(_model);
-      });
+    _model.descriptionTextController ??= TextEditingController();
     _model.descriptionFocusNode ??= FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
-
     _model.dispose();
 
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(AddWordWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _model.widget = widget;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = DebugModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
-    }
-    debugLogGlobalProperty(context);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPush() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPop() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
-  void didPushNext() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    DebugFlutterFlowModelContext.maybeOf(context)
-        ?.parentModelCallback
-        ?.call(_model);
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -883,17 +828,20 @@ class _AddWordWidgetState extends State<AddWordWidget> with RouteAware {
                         EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
                     child: FFButtonWidget(
                       onPressed: () async {
-                        await WordsRecord.collection
-                            .doc()
-                            .set(createWordsRecordData(
-                              word: _model.taskTextController1.text,
-                              meaning: _model.taskTextController2.text,
-                              unit: _model.choiceChipsValue,
-                              explain: _model.descriptionTextController.text,
-                            ));
-                        context.safePop();
+                        try {
+                          await SQLiteManager.instance.saveWord(
+                            word: _model.taskTextController1.text,
+                            meaning: _model.taskTextController2.text,
+                            unit: _model.choiceChipsValue ?? '',
+                            explanation: _model.descriptionTextController.text,
+                          );
+                          if (context.mounted) context.safePop();
+                        } catch (_) {
+                          if (context.mounted) showSnackbar(context,
+                            'Could not save. Enter a word, meaning and unit; avoid duplicate words in the same unit.');
+                        }
                       },
-                      text: 'Creat',
+                      text: 'Create',
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 48.0,

@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 
+import '/backend/sqlite/sqlite_manager.dart';
+
 import '/main.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/lat_lng.dart';
@@ -22,21 +24,6 @@ export 'serialization_util.dart';
 const kTransitionInfoKey = '__transition_info__';
 
 GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
-
-const debugRouteLinkMap = {
-  '/aBout':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=ABout',
-  '/addWord':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=addWord',
-  '/setting':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=Setting',
-  '/wordList':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=WordList',
-  '/wordsDetails':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=WordsDetails',
-  '/editWord':
-      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=EditWord'
-};
 
 class AppStateNotifier extends ChangeNotifier {
   AppStateNotifier._();
@@ -93,11 +80,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: WordsDetailsWidget.routeName,
           path: WordsDetailsWidget.routePath,
           builder: (context, params) => WordsDetailsWidget(
-            wordDoc: params.getParam(
-              'wordDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['words'],
+            wordId: params.getParam(
+              'wordId',
+              ParamType.int,
             ),
           ),
         ),
@@ -121,16 +106,23 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'initUnit',
               ParamType.String,
             ),
-            editWordDoc: params.getParam(
-              'editWordDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['words'],
+            wordId: params.getParam(
+              'wordId',
+              ParamType.int,
+            ),
+          ),
+        ),
+        FFRoute(
+          name: UnitWordsWidget.routeName,
+          path: UnitWordsWidget.routePath,
+          builder: (context, params) => UnitWordsWidget(
+            selectedUnit: params.getParam(
+              'selectedUnit',
+              ParamType.String,
             ),
           ),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
-      observers: [routeObserver],
     );
 
 extension NavParamExtensions on Map<String, String?> {
@@ -260,6 +252,7 @@ class FFRoute {
           return transitionInfo.hasTransition
               ? CustomTransitionPage(
                   key: state.pageKey,
+                  name: state.name,
                   child: child,
                   transitionDuration: transitionInfo.duration,
                   transitionsBuilder:
@@ -277,7 +270,8 @@ class FFRoute {
                     child,
                   ),
                 )
-              : MaterialPage(key: state.pageKey, child: child);
+              : MaterialPage(
+                  key: state.pageKey, name: state.name, child: child);
         },
         routes: routes,
       );

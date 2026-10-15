@@ -1,3 +1,4 @@
+import '/backend/sqlite/sqlite_manager.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -5,9 +6,8 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
 import '/index.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 import 'words_details_model.dart';
 export 'words_details_model.dart';
@@ -15,10 +15,10 @@ export 'words_details_model.dart';
 class WordsDetailsWidget extends StatefulWidget {
   const WordsDetailsWidget({
     super.key,
-    required this.wordDoc,
+    required this.wordId,
   });
 
-  final DocumentReference? wordDoc;
+  final int? wordId;
 
   static String routeName = 'WordsDetails';
   static String routePath = '/wordsDetails';
@@ -27,8 +27,7 @@ class WordsDetailsWidget extends StatefulWidget {
   State<WordsDetailsWidget> createState() => _WordsDetailsWidgetState();
 }
 
-class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
-    with RouteAware {
+class _WordsDetailsWidgetState extends State<WordsDetailsWidget> {
   late WordsDetailsModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -37,69 +36,27 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
   void initState() {
     super.initState();
     _model = createModel(context, () => WordsDetailsModel());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
-
     _model.dispose();
 
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(WordsDetailsWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _model.widget = widget;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = DebugModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
-    }
-    debugLogGlobalProperty(context);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPush() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPop() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
-  void didPushNext() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    DebugFlutterFlowModelContext.maybeOf(context)
-        ?.parentModelCallback
-        ?.call(_model);
-
-    return StreamBuilder<WordsRecord>(
-      stream: WordsRecord.getDocument(widget!.wordDoc!),
+    return FutureBuilder<GetAllWordsRow?>(
+      future: widget.wordId == null ? Future.value(null) : SQLiteManager.instance.getWord(widget.wordId!),
       builder: (context, snapshot) {
         // Customize what your widget looks like when it's loading.
+        if (snapshot.hasError || (snapshot.connectionState == ConnectionState.done && !snapshot.hasData)) {
+          return Scaffold(appBar: AppBar(title: const Text('Word details')),
+            body: const Center(child: Text('This word is unavailable. Go back and refresh the list.')));
+        }
         if (!snapshot.hasData) {
           return Scaffold(
             backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
@@ -118,16 +75,6 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
         }
 
         final wordsDetailsWordsRecord = snapshot.data!;
-        _model.debugBackendQueries[
-            'wordsDetailsWordsRecord_Scaffold_382t8jxw'] = debugSerializeParam(
-          wordsDetailsWordsRecord,
-          ParamType.Document,
-          link:
-              'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=WordsDetails',
-          name: 'words',
-          nullable: false,
-        );
-        debugLogWidgetClass(_model);
 
         return Scaffold(
           key: scaffoldKey,
@@ -200,7 +147,7 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                         ),
                         SelectionArea(
                             child: AutoSizeText(
-                          wordsDetailsWordsRecord.word,
+                          wordsDetailsWordsRecord.word ?? '',
                           textAlign: TextAlign.start,
                           minFontSize: 14.0,
                           style: FlutterFlowTheme.of(context)
@@ -227,7 +174,7 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                           padding: EdgeInsetsDirectional.fromSTEB(
                               0.0, 25.0, 0.0, 0.0),
                           child: Text(
-                            wordsDetailsWordsRecord.meaning,
+                            wordsDetailsWordsRecord.meaning ?? '',
                             textAlign: TextAlign.end,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
@@ -254,7 +201,7 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                           padding: EdgeInsetsDirectional.fromSTEB(
                               0.0, 8.0, 0.0, 8.0),
                           child: Text(
-                            wordsDetailsWordsRecord.unit,
+                            wordsDetailsWordsRecord.unit ?? '',
                             style: FlutterFlowTheme.of(context)
                                 .titleMedium
                                 .override(
@@ -278,7 +225,7 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                           ),
                         ),
                         Text(
-                          wordsDetailsWordsRecord.explain,
+                          wordsDetailsWordsRecord.explanation ?? '',
                           style:
                               FlutterFlowTheme.of(context).labelLarge.override(
                                     font: GoogleFonts.inter(
@@ -313,31 +260,32 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                           EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 24.0),
                       child: FFButtonWidget(
                         onPressed: () async {
-                          context.pushNamed(
+                          await context.pushNamed(
                             EditWordWidget.routeName,
                             queryParameters: {
                               'initWord': serializeParam(
-                                wordsDetailsWordsRecord.word,
+                                wordsDetailsWordsRecord.word ?? '',
                                 ParamType.String,
                               ),
                               'initMeaning': serializeParam(
-                                wordsDetailsWordsRecord.meaning,
+                                wordsDetailsWordsRecord.meaning ?? '',
                                 ParamType.String,
                               ),
                               'initExplain': serializeParam(
-                                wordsDetailsWordsRecord.explain,
+                                wordsDetailsWordsRecord.explanation ?? '',
                                 ParamType.String,
                               ),
                               'initUnit': serializeParam(
-                                wordsDetailsWordsRecord.unit,
+                                wordsDetailsWordsRecord.unit ?? '',
                                 ParamType.String,
                               ),
-                              'editWordDoc': serializeParam(
-                                widget!.wordDoc,
-                                ParamType.DocumentReference,
+                              'wordId': serializeParam(
+                                widget.wordId,
+                                ParamType.int,
                               ),
                             }.withoutNulls,
                           );
+                          safeSetState(() {});
                         },
                         text: 'Edit',
                         options: FFButtonOptions(
@@ -408,8 +356,13 @@ class _WordsDetailsWidgetState extends State<WordsDetailsWidget>
                                 },
                               ) ??
                               false;
-                          await widget!.wordDoc!.delete();
-                          context.safePop();
+                          if (!confirmDialogResponse) return;
+                          try {
+                            await SQLiteManager.instance.deleteWord(widget.wordId!);
+                            if (context.mounted) context.safePop();
+                          } catch (_) {
+                            if (context.mounted) showSnackbar(context, 'Could not delete this word.');
+                          }
                         },
                         text: 'Delete',
                         options: FFButtonOptions(

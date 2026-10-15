@@ -1,39 +1,29 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '/backend/schema/util/firestore_util.dart';
 import '/backend/schema/util/schema_util.dart';
 
 import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class FilterTypeStruct extends FFFirebaseStruct {
+class FilterTypeStruct extends BaseStruct {
   FilterTypeStruct({
     String? key,
     String? value,
-    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _key = key,
-        _value = value,
-        super(firestoreUtilData);
+        _value = value;
 
   // "key" field.
   String? _key;
   String get key => _key ?? '';
-  set key(String? val) {
-    _key = val;
-    debugLog();
-  }
+  set key(String? val) => _key = val;
 
   bool hasKey() => _key != null;
 
   // "value" field.
   String? _value;
   String get value => _value ?? '';
-  set value(String? val) {
-    _value = val;
-    debugLog();
-  }
+  set value(String? val) => _value = val;
 
   bool hasValue() => _value != null;
 
@@ -77,21 +67,6 @@ class FilterTypeStruct extends FFFirebaseStruct {
           false,
         ),
       );
-  @override
-  Map<String, DebugDataField> toDebugSerializableMap() => {
-        'key': debugSerializeParam(
-          key,
-          ParamType.String,
-          name: 'String',
-          nullable: false,
-        ),
-        'value': debugSerializeParam(
-          value,
-          ParamType.String,
-          name: 'String',
-          nullable: false,
-        ),
-      };
 
   @override
   String toString() => 'FilterTypeStruct(${toMap()})';
@@ -106,81 +81,3 @@ class FilterTypeStruct extends FFFirebaseStruct {
   @override
   int get hashCode => const ListEquality().hash([key, value]);
 }
-
-FilterTypeStruct createFilterTypeStruct({
-  String? key,
-  String? value,
-  Map<String, dynamic> fieldValues = const {},
-  bool clearUnsetFields = true,
-  bool create = false,
-  bool delete = false,
-}) =>
-    FilterTypeStruct(
-      key: key,
-      value: value,
-      firestoreUtilData: FirestoreUtilData(
-        clearUnsetFields: clearUnsetFields,
-        create: create,
-        delete: delete,
-        fieldValues: fieldValues,
-      ),
-    );
-
-FilterTypeStruct? updateFilterTypeStruct(
-  FilterTypeStruct? filterType, {
-  bool clearUnsetFields = true,
-  bool create = false,
-}) =>
-    filterType
-      ?..firestoreUtilData = FirestoreUtilData(
-        clearUnsetFields: clearUnsetFields,
-        create: create,
-      );
-
-void addFilterTypeStructData(
-  Map<String, dynamic> firestoreData,
-  FilterTypeStruct? filterType,
-  String fieldName, [
-  bool forFieldValue = false,
-]) {
-  firestoreData.remove(fieldName);
-  if (filterType == null) {
-    return;
-  }
-  if (filterType.firestoreUtilData.delete) {
-    firestoreData[fieldName] = FieldValue.delete();
-    return;
-  }
-  final clearFields =
-      !forFieldValue && filterType.firestoreUtilData.clearUnsetFields;
-  if (clearFields) {
-    firestoreData[fieldName] = <String, dynamic>{};
-  }
-  final filterTypeData = getFilterTypeFirestoreData(filterType, forFieldValue);
-  final nestedData = filterTypeData.map((k, v) => MapEntry('$fieldName.$k', v));
-
-  final mergeFields = filterType.firestoreUtilData.create || clearFields;
-  firestoreData
-      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
-}
-
-Map<String, dynamic> getFilterTypeFirestoreData(
-  FilterTypeStruct? filterType, [
-  bool forFieldValue = false,
-]) {
-  if (filterType == null) {
-    return {};
-  }
-  final firestoreData = mapToFirestore(filterType.toMap());
-
-  // Add any Firestore field values
-  filterType.firestoreUtilData.fieldValues
-      .forEach((k, v) => firestoreData[k] = v);
-
-  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
-}
-
-List<Map<String, dynamic>> getFilterTypeListFirestoreData(
-  List<FilterTypeStruct>? filterTypes,
-) =>
-    filterTypes?.map((e) => getFilterTypeFirestoreData(e, true)).toList() ?? [];

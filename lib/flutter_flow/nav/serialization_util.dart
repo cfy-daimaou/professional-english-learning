@@ -6,17 +6,22 @@ import 'package:from_css_color/from_css_color.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 
+import '/backend/sqlite/queries/sqlite_row.dart';
+import '/backend/sqlite/queries/read.dart';
 import '../../flutter_flow/lat_lng.dart';
 import '../../flutter_flow/place.dart';
 import '../../flutter_flow/uploaded_file.dart';
 
-import 'package:debug_panel_proto/debug_panel_proto.dart';
-
 /// SERIALIZATION HELPERS
 
+String dateTimeToString(DateTime dateTime) =>
+    '${dateTime.isUtc ? 'u' : 'l'}${dateTime.millisecondsSinceEpoch}';
+
 String dateTimeRangeToString(DateTimeRange dateTimeRange) {
-  final startStr = dateTimeRange.start.millisecondsSinceEpoch.toString();
-  final endStr = dateTimeRange.end.millisecondsSinceEpoch.toString();
+  final start = dateTimeRange.start;
+  final end = dateTimeRange.end;
+  final startStr = '${start.isUtc ? 'u' : 'l'}${start.millisecondsSinceEpoch}';
+  final endStr = '${end.isUtc ? 'u' : 'l'}${end.millisecondsSinceEpoch}';
   return '$startStr|$endStr';
 }
 
@@ -32,19 +37,6 @@ String placeToString(FFPlace place) => jsonEncode({
 
 String uploadedFileToString(FFUploadedFile uploadedFile) =>
     uploadedFile.serialize();
-
-const _kDocIdDelimeter = '|';
-String _serializeDocumentReference(DocumentReference ref) {
-  final docIds = <String>[];
-  DocumentReference? currentRef = ref;
-  while (currentRef != null) {
-    docIds.add(currentRef.id);
-    // Get the parent document (catching any errors that arise).
-    currentRef = safeGet<DocumentReference?>(() => currentRef?.parent.parent);
-  }
-  // Reverse the list to get the correct ordering.
-  return docIds.reversed.join(_kDocIdDelimeter);
-}
 
 String? serializeParam(
   dynamic param,
@@ -74,7 +66,7 @@ String? serializeParam(
       case ParamType.bool:
         data = param ? 'true' : 'false';
       case ParamType.DateTime:
-        data = (param as DateTime).millisecondsSinceEpoch.toString();
+        data = dateTimeToString(param as DateTime);
       case ParamType.DateTimeRange:
         data = dateTimeRangeToString(param as DateTimeRange);
       case ParamType.LatLng:
@@ -87,14 +79,11 @@ String? serializeParam(
         data = uploadedFileToString(param as FFUploadedFile);
       case ParamType.JSON:
         data = json.encode(param);
-      case ParamType.DocumentReference:
-        data = _serializeDocumentReference(param as DocumentReference);
-      case ParamType.Document:
-        final reference = (param as FirestoreRecord).reference;
-        data = _serializeDocumentReference(reference);
-
       case ParamType.DataStruct:
         data = param is BaseStruct ? param.serialize() : null;
+
+      case ParamType.SqliteRow:
+        return json.encode((param as SqliteRow).data);
 
       default:
         data = null;
@@ -106,137 +95,50 @@ String? serializeParam(
   }
 }
 
-DebugDataField debugSerializeParam(
-  dynamic param,
-  ParamType paramType, {
-  bool isList = false,
-  String? link,
-  String? searchReference,
-  String? name,
-  bool? nullable,
-}) {
-  try {
-    if (isList) {
-      final values = (param as Iterable?)
-          ?.map((p) => debugSerializeParam(
-                p,
-                paramType,
-                isList: false,
-              ))
-          .toList();
-      return DebugDataField(
-        type: _kParamTypeProtoMap[paramType],
-        listValue: ListDebugDataField(values: values),
-        link: link,
-        searchReference: searchReference,
-        name: name,
-        nullable: nullable,
-      );
-    }
-    String? data;
-    var type = _kParamTypeProtoMap[paramType];
-    if (param != null) {
-      switch (paramType) {
-        case ParamType.int:
-          data = param.toString();
-        case ParamType.double:
-          data = param.toString();
-        case ParamType.String:
-          data = param;
-        case ParamType.bool:
-          data = param ? 'true' : 'false';
-        case ParamType.DateTime:
-          data = (param as DateTime).millisecondsSinceEpoch.toString();
-        case ParamType.DateTimeRange:
-          data = dateTimeRangeToString(param as DateTimeRange);
-        case ParamType.LatLng:
-          data = (param as LatLng).serialize();
-        case ParamType.Color:
-          data = (param as Color).toCssString();
-        case ParamType.FFPlace:
-          data = placeToString(param as FFPlace);
-        case ParamType.FFUploadedFile:
-          data = uploadedFileToString(param as FFUploadedFile);
-        case ParamType.JSON:
-          data = json.encode(param);
-        case ParamType.DocumentReference:
-          data = _serializeDocumentReference(param as DocumentReference);
-        case ParamType.Document:
-          return DebugDataField(
-            type: DebugDataField_ParamType.DOCUMENT,
-            mapValue: MapDebugDataField(
-              values: param.toDebugSerializableMap(),
-            ),
-            link: link,
-            searchReference: searchReference,
-            name: name,
-            nullable: nullable,
-          );
-
-        case ParamType.DataStruct:
-          if (param is BaseStruct) {
-            return DebugDataField(
-              type: DebugDataField_ParamType.DATA_STRUCT,
-              mapValue: MapDebugDataField(
-                values: param.toDebugSerializableMap(),
-              ),
-              link: link,
-              searchReference: searchReference,
-              name: name,
-              nullable: nullable,
-            );
-          } else {
-            return DebugDataField();
-          }
-
-        case ParamType.Action:
-        case ParamType.Widget:
-          data = param.runtimeType.toString();
-        case ParamType.ApiResponse:
-          return DebugDataField(
-            type: DebugDataField_ParamType.DATA_STRUCT,
-            mapValue: MapDebugDataField(
-              values: {
-                'statusCode':
-                    debugSerializeParam(param.statusCode, ParamType.int),
-                'body': debugSerializeParam(param.bodyText, ParamType.String),
-              },
-            ),
-            link: link,
-            name: name,
-            nullable: nullable,
-          );
-
-        default:
-          data = null;
-      }
-    }
-    return DebugDataField(
-      serializedValue: data,
-      type: type,
-      link: link,
-      searchReference: searchReference,
-      name: name,
-      nullable: nullable,
-    );
-  } catch (e) {
-    print('Error debug serializing parameter: $e');
-    return DebugDataField();
-  }
-}
-
 /// END SERIALIZATION HELPERS
 
 /// DESERIALIZATION HELPERS
+
+DateTime? dateTimeFromString(String? dateTimeStr) {
+  if (dateTimeStr == null || dateTimeStr.isEmpty) {
+    return null;
+  }
+  final hasPrefix = dateTimeStr.startsWith('u') || dateTimeStr.startsWith('l');
+  final milliseconds = int.tryParse(
+    hasPrefix ? dateTimeStr.substring(1) : dateTimeStr,
+  );
+  return milliseconds != null
+      ? DateTime.fromMillisecondsSinceEpoch(
+          milliseconds,
+          isUtc: hasPrefix ? dateTimeStr.startsWith('u') : false,
+        )
+      : null;
+}
 
 DateTimeRange? dateTimeRangeFromString(String dateTimeRangeStr) {
   final pieces = dateTimeRangeStr.split('|');
   if (pieces.length != 2) {
     return null;
   }
+  DateTime? parseDateTime(String value) {
+    final hasPrefix = value.startsWith('u') || value.startsWith('l');
+    final milliseconds = int.tryParse(hasPrefix ? value.substring(1) : value);
+    return milliseconds != null
+        ? DateTime.fromMillisecondsSinceEpoch(
+            milliseconds,
+            isUtc: hasPrefix ? value.startsWith('u') : false,
+          )
+        : null;
+  }
+
+  final start = parseDateTime(pieces.first);
+  final end = parseDateTime(pieces.last);
+  if (start == null || end == null) {
+    return null;
+  }
   return DateTimeRange(
-    start: DateTime.fromMillisecondsSinceEpoch(int.parse(pieces.first)),
-    end: DateTime.fromMillisecondsSinceEpoch(int.parse(pieces.last)),
+    start: start,
+    end: end,
   );
 }
 
@@ -278,18 +180,6 @@ FFPlace placeFromString(String placeStr) {
 FFUploadedFile uploadedFileFromString(String uploadedFileStr) =>
     FFUploadedFile.deserialize(uploadedFileStr);
 
-DocumentReference _deserializeDocumentReference(
-  String refStr,
-  List<String> collectionNamePath,
-) {
-  var path = '';
-  final docIds = refStr.split(_kDocIdDelimeter);
-  for (int i = 0; i < docIds.length && i < collectionNamePath.length; i++) {
-    path += '/${collectionNamePath[i]}/${docIds[i]}';
-  }
-  return FirebaseFirestore.instance.doc(path);
-}
-
 enum ParamType {
   int,
   double,
@@ -302,32 +192,11 @@ enum ParamType {
   FFPlace,
   FFUploadedFile,
   JSON,
-  Action,
-  Widget,
-  ApiResponse,
-  Document,
-  DocumentReference,
-  DataStruct,
-}
 
-const _kParamTypeProtoMap = {
-  ParamType.int: DebugDataField_ParamType.INT,
-  ParamType.double: DebugDataField_ParamType.DOUBLE,
-  ParamType.String: DebugDataField_ParamType.STRING,
-  ParamType.bool: DebugDataField_ParamType.BOOL,
-  ParamType.DateTime: DebugDataField_ParamType.DATE_TIME,
-  ParamType.DateTimeRange: DebugDataField_ParamType.DATE_TIME_RANGE,
-  ParamType.LatLng: DebugDataField_ParamType.LAT_LNG,
-  ParamType.Color: DebugDataField_ParamType.COLOR,
-  ParamType.FFPlace: DebugDataField_ParamType.FF_PLACE,
-  ParamType.FFUploadedFile: DebugDataField_ParamType.FF_UPLOADED_FILE,
-  ParamType.JSON: DebugDataField_ParamType.JSON,
-  ParamType.Action: DebugDataField_ParamType.ACTION,
-  ParamType.Widget: DebugDataField_ParamType.WIDGET,
-  ParamType.Document: DebugDataField_ParamType.DOCUMENT,
-  ParamType.DocumentReference: DebugDataField_ParamType.DOCUMENT_REFERENCE,
-  ParamType.DataStruct: DebugDataField_ParamType.DATA_STRUCT,
-};
+  DataStruct,
+
+  SqliteRow,
+}
 
 dynamic deserializeParam<T>(
   String? param,
@@ -369,10 +238,7 @@ dynamic deserializeParam<T>(
       case ParamType.bool:
         return param == 'true';
       case ParamType.DateTime:
-        final milliseconds = int.tryParse(param);
-        return milliseconds != null
-            ? DateTime.fromMillisecondsSinceEpoch(milliseconds)
-            : null;
+        return dateTimeFromString(param);
       case ParamType.DateTimeRange:
         return dateTimeRangeFromString(param);
       case ParamType.LatLng:
@@ -385,12 +251,22 @@ dynamic deserializeParam<T>(
         return uploadedFileFromString(param);
       case ParamType.JSON:
         return json.decode(param);
-      case ParamType.DocumentReference:
-        return _deserializeDocumentReference(param, collectionNamePath ?? []);
-
       case ParamType.DataStruct:
         final data = json.decode(param) as Map<String, dynamic>? ?? {};
         return structBuilder != null ? structBuilder(data) : null;
+
+      case ParamType.SqliteRow:
+        final data = json.decode(param) as Map<String, dynamic>;
+        switch (T) {
+          case GetUnitsRow:
+            return GetUnitsRow(data);
+          case GetWordsByUnitRow:
+            return GetWordsByUnitRow(data);
+          case GetAllWordsRow:
+            return GetAllWordsRow(data);
+          default:
+            return null;
+        }
 
       default:
         return null;
@@ -399,33 +275,4 @@ dynamic deserializeParam<T>(
     print('Error deserializing parameter: $e');
     return null;
   }
-}
-
-Future<dynamic> Function(String) getDoc(
-  List<String> collectionNamePath,
-  RecordBuilder recordBuilder,
-) {
-  return (String ids) => _deserializeDocumentReference(ids, collectionNamePath)
-      .get()
-      .then((s) => recordBuilder(s));
-}
-
-Future<List<T>> Function(String) getDocList<T>(
-  List<String> collectionNamePath,
-  RecordBuilder<T> recordBuilder,
-) {
-  return (String idsList) {
-    List<String> docIds = [];
-    try {
-      final ids = json.decode(idsList) as Iterable;
-      docIds = ids.where((d) => d is String).map((d) => d as String).toList();
-    } catch (_) {}
-    return Future.wait(
-      docIds.map(
-        (ids) => _deserializeDocumentReference(ids, collectionNamePath)
-            .get()
-            .then((s) => recordBuilder(s)),
-      ),
-    ).then((docs) => docs.where((d) => d != null).map((d) => d!).toList());
-  };
 }

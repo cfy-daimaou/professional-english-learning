@@ -7,10 +7,9 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
 import 'add_word_widget.dart' show AddWordWidget;
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 
 class AddWordModel extends FlutterFlowModel<AddWordWidget> {
@@ -33,18 +32,11 @@ class AddWordModel extends FlutterFlowModel<AddWordWidget> {
   FormFieldController<List<String>>? choiceChipsValueController;
   String? get choiceChipsValue =>
       choiceChipsValueController?.value?.firstOrNull;
-  set choiceChipsValue(String? val) {
-    choiceChipsValueController?.value = val != null ? [val] : [];
-    debugLogWidgetClass(this);
-  }
+  set choiceChipsValue(String? val) =>
+      choiceChipsValueController?.value = val != null ? [val] : [];
 
-  final Map<String, DebugDataField> debugGeneratorVariables = {};
-  final Map<String, DebugDataField> debugBackendQueries = {};
-  final Map<String, FlutterFlowModel> widgetBuilderComponents = {};
   @override
-  void initState(BuildContext context) {
-    debugLogWidgetClass(this);
-  }
+  void initState(BuildContext context) {}
 
   @override
   void dispose() {
@@ -57,56 +49,4 @@ class AddWordModel extends FlutterFlowModel<AddWordWidget> {
     descriptionFocusNode?.dispose();
     descriptionTextController?.dispose();
   }
-
-  @override
-  WidgetClassDebugData toWidgetClassDebugData() => WidgetClassDebugData(
-        widgetStates: {
-          'taskText1': debugSerializeParam(
-            taskTextController1?.text,
-            ParamType.String,
-            link:
-                'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=addWord',
-            name: 'String',
-            nullable: true,
-          ),
-          'taskText2': debugSerializeParam(
-            taskTextController2?.text,
-            ParamType.String,
-            link:
-                'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=addWord',
-            name: 'String',
-            nullable: true,
-          ),
-          'descriptionText': debugSerializeParam(
-            descriptionTextController?.text,
-            ParamType.String,
-            link:
-                'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=addWord',
-            name: 'String',
-            nullable: true,
-          ),
-          'choiceChipsValue': debugSerializeParam(
-            choiceChipsValue,
-            ParamType.String,
-            link:
-                'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=addWord',
-            name: 'String',
-            nullable: true,
-          )
-        },
-        generatorVariables: debugGeneratorVariables,
-        backendQueries: debugBackendQueries,
-        componentStates: {
-          ...widgetBuilderComponents.map(
-            (key, value) => MapEntry(
-              key,
-              value.toWidgetClassDebugData(),
-            ),
-          ),
-        }.withoutNulls,
-        link:
-            'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk/tab=uiBuilder&page=addWord',
-        searchReference: 'reference=OgdhZGRXb3JkUAFaB2FkZFdvcmQ=',
-        widgetClassName: 'addWord',
-      );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'flutter_flow/request_manager.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
+import '/backend/sqlite/sqlite_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 
@@ -21,22 +21,19 @@ class FFAppState extends ChangeNotifier {
   Future initializePersistedState() async {
     prefs = await SharedPreferences.getInstance();
     _safeInit(() {
-      _SmartPhoneFilter = LoggableList(
-        prefs
-                .getStringList('ff_SmartPhoneFilter')
-                ?.map((x) {
-                  try {
-                    return FilterColumnStruct.fromSerializableMap(
-                        jsonDecode(x));
-                  } catch (e) {
-                    print("Can't decode persisted data type. Error: $e.");
-                    return null;
-                  }
-                })
-                .withoutNulls
-                .toList() ??
-            _SmartPhoneFilter,
-      );
+      _SmartPhoneFilter = prefs
+              .getStringList('ff_SmartPhoneFilter')
+              ?.map((x) {
+                try {
+                  return FilterColumnStruct.fromSerializableMap(jsonDecode(x));
+                } catch (e) {
+                  print("Can't decode persisted data type. Error: $e.");
+                  return null;
+                }
+              })
+              .withoutNulls
+              .toList() ??
+          _SmartPhoneFilter;
     });
   }
 
@@ -47,7 +44,7 @@ class FFAppState extends ChangeNotifier {
 
   late SharedPreferences prefs;
 
-  late LoggableList<FilterColumnStruct> _SmartPhoneFilter = LoggableList([
+  List<FilterColumnStruct> _SmartPhoneFilter = [
     FilterColumnStruct.fromSerializableMap(jsonDecode(
         '{\"key\":\"price\",\"value\":\"Price\",\"options\":\"[\\\"1000 - 2000\\\",\\\"2000 - 3000\\\",\\\"3000 - 4000\\\",\\\"4000 - 5000\\\",\\\"5000+\\\"]\"}')),
     FilterColumnStruct.fromSerializableMap(jsonDecode(
@@ -80,17 +77,12 @@ class FFAppState extends ChangeNotifier {
         '{\"key\":\"weight\",\"value\":\"Weight\",\"options\":\"[\\\"150 - 170 g\\\",\\\"170 - 190 g\\\",\\\"190 - 210 g\\\",\\\"210+ g\\\"]\"}')),
     FilterColumnStruct.fromSerializableMap(jsonDecode(
         '{\"key\":\"build_material\",\"value\":\"Build Material\",\"options\":\"[\\\"Plastic\\\",\\\"Glass\\\",\\\"Aluminum\\\",\\\"Ceramic\\\"]\"}'))
-  ]);
-  List<FilterColumnStruct> get SmartPhoneFilter =>
-      _SmartPhoneFilter?..logger = () => debugLogAppState(this);
+  ];
+  List<FilterColumnStruct> get SmartPhoneFilter => _SmartPhoneFilter;
   set SmartPhoneFilter(List<FilterColumnStruct> value) {
-    if (value != null) {
-      _SmartPhoneFilter = LoggableList(value);
-    }
-
+    _SmartPhoneFilter = value;
     prefs.setStringList(
         'ff_SmartPhoneFilter', value.map((x) => x.serialize()).toList());
-    debugLogAppState(this);
   }
 
   void addToSmartPhoneFilter(FilterColumnStruct value) {
@@ -126,18 +118,13 @@ class FFAppState extends ChangeNotifier {
         _SmartPhoneFilter.map((x) => x.serialize()).toList());
   }
 
-  late LoggableList<WordItemStruct> _wordsList = LoggableList([
+  List<WordItemStruct> _wordsList = [
     WordItemStruct.fromSerializableMap(
         jsonDecode('{\"word\":\"Hello World\",\"meaning\":\"Hello World\"}'))
-  ]);
-  List<WordItemStruct> get wordsList =>
-      _wordsList?..logger = () => debugLogAppState(this);
+  ];
+  List<WordItemStruct> get wordsList => _wordsList;
   set wordsList(List<WordItemStruct> value) {
-    if (value != null) {
-      _wordsList = LoggableList(value);
-    }
-
-    debugLogAppState(this);
+    _wordsList = value;
   }
 
   void addToWordsList(WordItemStruct value) {
@@ -162,46 +149,6 @@ class FFAppState extends ChangeNotifier {
   void insertAtIndexInWordsList(int index, WordItemStruct value) {
     wordsList.insert(index, value);
   }
-
-  final _localManager = StreamRequestManager<List<WordsRecord>>();
-  Stream<List<WordsRecord>> local({
-    String? uniqueQueryKey,
-    bool? overrideCache,
-    required Stream<List<WordsRecord>> Function() requestFn,
-  }) =>
-      _localManager.performRequest(
-        uniqueQueryKey: uniqueQueryKey,
-        overrideCache: overrideCache,
-        requestFn: requestFn,
-      );
-  void clearLocalCache() => _localManager.clear();
-  void clearLocalCacheKey(String? uniqueKey) =>
-      _localManager.clearRequest(uniqueKey);
-
-  Map<String, DebugDataField> toDebugSerializableMap() => {
-        'SmartPhoneFilter': debugSerializeParam(
-          SmartPhoneFilter,
-          ParamType.DataStruct,
-          isList: true,
-          link:
-              'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=appValues&appValuesTab=state',
-          searchReference:
-              'reference=Cj0KHAoQU21hcnRQaG9uZUZpbHRlchIIZXAzbzBud2lyHRICCBQqFxIVCgxGaWx0ZXJDb2x1bW4SBXNrbm1zWhBTbWFydFBob25lRmlsdGVy',
-          name: 'FilterColumn',
-          nullable: false,
-        ),
-        'wordsList': debugSerializeParam(
-          wordsList,
-          ParamType.DataStruct,
-          isList: true,
-          link:
-              'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=appValues&appValuesTab=state',
-          searchReference:
-              'reference=CjQKFQoJd29yZHNMaXN0Egg2aGRoNXNiY3IZEgIIFCoTEhEKCFdvcmRJdGVtEgVoeGphbHoAWgl3b3Jkc0xpc3Q=',
-          name: 'WordItem',
-          nullable: false,
-        )
-      };
 }
 
 void _safeInit(Function() initializeField) {

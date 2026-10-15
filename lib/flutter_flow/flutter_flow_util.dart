@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,14 +10,6 @@ import 'package:intl/intl.dart';
 import 'package:json_path/json_path.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
-
-import 'debug_util.dart';
-
-export 'debug_util.dart';
-
-export 'package:debug_panel_proto/debug_panel_proto.dart';
-
-export 'nav/serialization_util.dart';
 
 import '../main.dart';
 
@@ -33,13 +24,9 @@ export 'dart:math' show min, max;
 export 'dart:typed_data' show Uint8List;
 export 'dart:convert' show jsonEncode, jsonDecode;
 export 'package:intl/intl.dart';
-export 'package:cloud_firestore/cloud_firestore.dart'
-    show DocumentReference, FirebaseFirestore;
 export 'package:page_transition/page_transition.dart';
 export 'custom_icons.dart' show FFIcons;
 export 'nav/nav.dart';
-
-final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
 T valueOrDefault<T>(T? value, T defaultValue) =>
     (value is String && value.isEmpty) || value == null ? defaultValue : value;
@@ -278,10 +265,6 @@ extension IterableExt<T> on Iterable<T> {
       .map((index, value) => MapEntry(index, func(index, value)))
       .values
       .toList();
-}
-
-extension StringDocRef on String {
-  DocumentReference get ref => FirebaseFirestore.instance.doc(this);
 }
 
 void setDarkModeSetting(BuildContext context, ThemeMode themeMode) =>

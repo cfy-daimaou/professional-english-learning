@@ -1,3 +1,32 @@
+# Professional English Learning — offline edition
+
+Version 1.1.0+2 preserves the existing Flutter UI and moves word browsing, details, creation, editing and deletion to SQLite. Startup does not initialize Firebase. Firebase dependencies and configuration files have been removed; system fonts require no downloads. Android's main manifest removes Internet and network-state permissions contributed by the app or dependencies.
+
+The distributable seed contains 70 vocabulary examples with empty progress, sessions, settings and metadata. First launch copies it into the private app database directory. Existing local database files are not overwritten, and edits persist across restarts. Uninstalling removes local data. Existing cloud vocabulary and Firestore caches are not automatically migrated.
+
+## Development
+
+Use Flutter 3.35.4 / Dart 3.9.2, JDK 17, Android SDK 36 and the NDK version in android/app/build.gradle. No cloud configuration is required. The lockfile pins Dart dependencies.
+
+```sh
+flutter pub get
+flutter analyze --no-fatal-infos --no-fatal-warnings
+dart run tool/verify_offline.dart
+flutter build apk --release
+```
+
+For cached builds, use `flutter pub get --offline` and `flutter build apk --release --no-pub`, with Gradle also configured offline. A fresh development environment may need dependency downloads; the installed application does not.
+
+The verification command executes production SQLite queries against a disposable copy of the seed. It checks quoted unit names, parameterization, creation, editing, duplicate rollback, required fields, persistence after reopening, deletion and dependent progress cleanup.
+
+The generated Android project currently signs release builds with its debug signing configuration. Configure private production signing before distribution and never commit signing keys or passwords. iOS files are retained but this revision has not been built or tested on iOS. Web is unsupported by this SQLite implementation. No cloud administration or billing changes are performed.
+
+---
+
+## Original server version documentation
+
+The existing repository documentation and original license statement are preserved below for historical context. Its Firebase instructions apply to the old server version.
+
 📚 Professional English Learning
 
 A lightweight, fast, and customizable vocabulary management app built using FlutterFlow + Flutter, designed for students learning Professional English (Computer Science major).

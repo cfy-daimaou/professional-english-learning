@@ -10,7 +10,7 @@ import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '/flutter_flow/offline_fonts.dart';
 import 'package:provider/provider.dart';
 import 'filter_dialog_model.dart';
 export 'filter_dialog_model.dart';
@@ -32,7 +32,7 @@ class FilterDialogWidget extends StatefulWidget {
 }
 
 class _FilterDialogWidgetState extends State<FilterDialogWidget>
-    with TickerProviderStateMixin, RouteAware {
+    with TickerProviderStateMixin {
   late FilterDialogModel _model;
 
   final animationsMap = <String, AnimationInfo>{};
@@ -70,64 +70,19 @@ class _FilterDialogWidgetState extends State<FilterDialogWidget>
         ],
       ),
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
-
     _model.maybeDispose();
 
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(FilterDialogWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _model.widget = widget;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = DebugModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
-    }
-    debugLogGlobalProperty(context);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPush() {
-    if (mounted && DebugFlutterFlowModelContext.maybeOf(context) == null) {
-      setState(() => _model.isRouteVisible = true);
-      debugLogWidgetClass(_model);
-    }
-  }
-
-  @override
-  void didPop() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
-  void didPushNext() {
-    _model.isRouteVisible = false;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    DebugFlutterFlowModelContext.maybeOf(context)
-        ?.parentModelCallback
-        ?.call(_model);
     context.watch<FFAppState>();
 
     return Row(
@@ -231,18 +186,6 @@ class _FilterDialogWidgetState extends State<FilterDialogWidget>
                             builder: (context) {
                               final filterColumn =
                                   FFAppState().SmartPhoneFilter.toList();
-                              _model.debugGeneratorVariables[
-                                      'filterColumn${filterColumn.length > 100 ? ' (first 100)' : ''}'] =
-                                  debugSerializeParam(
-                                filterColumn.take(100),
-                                ParamType.DataStruct,
-                                isList: true,
-                                link:
-                                    'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=FilterDialog',
-                                name: 'FilterColumn',
-                                nullable: false,
-                              );
-                              debugLogWidgetClass(_model);
 
                               return SingleChildScrollView(
                                 primary: false,
@@ -369,18 +312,6 @@ class _FilterDialogWidgetState extends State<FilterDialogWidget>
                                 final options =
                                     _model.chooseCategory?.options?.toList() ??
                                         [];
-                                _model.debugGeneratorVariables[
-                                        'options${options.length > 100 ? ' (first 100)' : ''}'] =
-                                    debugSerializeParam(
-                                  options.take(100),
-                                  ParamType.String,
-                                  isList: true,
-                                  link:
-                                      'https://app.flutterflow.io/project/product-filtercomponent-jkvmwk?tab=uiBuilder&page=FilterDialog',
-                                  name: 'String',
-                                  nullable: false,
-                                );
-                                debugLogWidgetClass(_model);
 
                                 return Column(
                                   mainAxisSize: MainAxisSize.max,
