@@ -19,7 +19,7 @@ For cached builds, use `flutter pub get --offline` and `flutter build apk --rele
 
 The verification command executes production SQLite queries against a disposable copy of the seed. It checks quoted unit names, parameterization, creation, editing, duplicate rollback, required fields, persistence after reopening, deletion and dependent progress cleanup.
 
-The generated Android project currently signs release builds with its debug signing configuration. Configure private production signing before distribution and never commit signing keys or passwords. iOS files are retained but this revision has not been built or tested on iOS. Web is unsupported by this SQLite implementation. No cloud administration or billing changes are performed.
+The generated Android project currently signs release builds with its debug signing configuration. Configure private production signing before distribution and never commit signing keys or passwords. The iOS release build has been compiled for a real-device ARM64 target with Xcode 16 / iPhoneOS 18 SDK and codesigning disabled. It has not been tested on a physical iOS device. An installable IPA requires a valid signing identity and provisioning profile, or an explicitly chosen re-signing workflow; an unsigned device build is not a ready-to-install package. Web is unsupported by this SQLite implementation. No cloud administration or billing changes are performed.
 
 ---
 
